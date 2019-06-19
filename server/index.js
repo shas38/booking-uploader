@@ -7,7 +7,8 @@ app.use(cors()); // so that app can access
 
 const bookings = JSON.parse(fs.readFileSync('./server/bookings.json'))
   .map((bookingRecord) => ({
-    time: Date.parse(bookingRecord.time),
+    // time: Date.parse(bookingRecord.time),
+    time: bookingRecord.time,
     duration: bookingRecord.duration * 60 * 1000, // mins into ms
     userId: bookingRecord.user_id,
   }))

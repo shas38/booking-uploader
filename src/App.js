@@ -1,14 +1,19 @@
 import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 import './App.css';
-
+import Timeline from './Timeline';
+// import uuidv1 from 'uuid/v1';
 const apiUrl = 'http://localhost:3001'
 
 class App extends Component {
 
-  state = {}
-
-  componentWillMount() {
+  constructor(props) {
+    super(props);
+    this.state = {
+      bookings: [],
+    };
+  }
+  componentDidMount() {
     fetch(`${apiUrl}/bookings`)
       .then((response) => response.json())
       .then((bookings) => {
@@ -24,11 +29,11 @@ class App extends Component {
     reader.onload = () => {
       // Do whatever you want with the file contents
       const binaryStr = reader.result
-      const newState = [];
+      const newBookings = [];
       let headers;
-      binaryStr.split('\n').forEach((line, index)=>{
-        if (!line.replace(/\s/g, '').length)
-          return
+      binaryStr.trim().split('\n').forEach((line, index)=>{
+        // if (!line.replace(/\s/g, '').length)
+        //   return
         console.log(line)
         if(index===0){
           headers = line.split(',');
@@ -45,18 +50,48 @@ class App extends Component {
             }
             
           })
-          newState.push(booking);
+          // booking.id = uuidv1();
+          newBookings.push(booking);
         }
       })
-
-      this.setState({bookings: [...this.state.bookings, ...newState] })
-      console.log(newState)
+      const results = this.findConflitcts(newBookings);
+      console.log(results)
+      this.setState({bookings: [...this.state.bookings, ...results.bookingsWithoutConflicts] })
+      
     }
 
     acceptedFiles.forEach(file => reader.readAsBinaryString(file))
   }
 
+  findConflitcts = (newBookings) => {
+    const conflicts = [];
+    const bookingsWithoutConflicts = [];
+
+    newBookings.forEach((newBooking)=>{
+      let conflictFound = false;
+      this.state.bookings.forEach((oldBooking) => {
+        const oldBookingStartTime = new Date(oldBooking.time).getTime();
+        const oldBookingEndTime = oldBookingStartTime + oldBooking.duration;
+        const newBookingStartTime = new Date(newBooking.time).getTime();
+        const newBookingEndTime = newBookingStartTime + newBooking.duration;
+
+        if((newBookingStartTime>=oldBookingStartTime && newBookingStartTime<oldBookingEndTime) || (newBookingEndTime>=oldBookingStartTime && newBookingEndTime<oldBookingEndTime) ){
+          conflicts.push([oldBooking, newBooking])
+          conflictFound = true;
+        }
+
+      })
+      if(!conflictFound){
+        bookingsWithoutConflicts.push(newBooking);
+      }
+    })
+    return {conflicts, bookingsWithoutConflicts};
+
+  }
+
+
   render() {
+    console.log(this.state.bookings)
     return (
       <div className="App">
         <div className="App-header">
@@ -67,10 +102,14 @@ class App extends Component {
             Drag files here
           </Dropzone>
         </div>
+        <Timeline 
+          bookings={this.state.bookings} 
+          
+        />
         <div className="App-main">
           <p>Existing bookings:</p>
           {
-            (this.state.bookings || []).map((booking, i) => {
+            (this.state.bookings).map((booking, i) => {
               const date = new Date(booking.time);
               console.log(booking.duration)
               const duration = booking.duration / (60 * 1000);
@@ -83,6 +122,9 @@ class App extends Component {
               )
             })
           }
+            {/* {this.state.bookings } */}
+          
+
         </div>
       </div>
     );
