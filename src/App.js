@@ -1,12 +1,14 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 import './App.css';
 import Timeline from './Timeline';
 import OverlappedTimeline from './OverlappedTimeline';
+
 const apiUrl = 'http://localhost:3001'
 
 class App extends Component {
 
+  // Constructor was added later for initialising the state
   constructor(props) {
     super(props);
     this.state = {
@@ -16,7 +18,9 @@ class App extends Component {
       error: '',
     };
   }
-  async componentDidMount() {
+
+  // Converted callbacks to async/await
+  componentDidMount = async () => {
     try{
       const result = await fetch(`${apiUrl}/bookings`)
       const resultBody = await result.json()
@@ -36,20 +40,19 @@ class App extends Component {
   }
 
   onDrop = async acceptedFiles => {
-    const reader = new FileReader()
 
+    const reader = new FileReader()
     reader.onabort = () => console.log('file reading was aborted')
     reader.onerror = () => console.log('file reading has failed')
     reader.onload = async () => {
-      // Do whatever you want with the file contents
+
       const binaryStr = reader.result
       const newBookings = [];
       let headers;
       binaryStr.trim().split('\n').forEach((line, index)=>{
-        // if (!line.replace(/\s/g, '').length)
-        //   return
-        console.log(line)
+
         if(index===0){
+          // Extract the headers and their position
           headers = line.split(',');
         }
         else{
@@ -64,12 +67,12 @@ class App extends Component {
             }
             
           })
-          // booking.id = uuidv1();
           newBookings.push(booking);
         }
       })
+      
       const results = this.findConflitcts(newBookings);
-      console.log(results)
+
       try{
         const result = await fetch(`${apiUrl}/bookings`, {
           method: 'POST',
@@ -79,16 +82,12 @@ class App extends Component {
           body: JSON.stringify(results.bookingsWithoutConflicts),
         });
         const resultBody = await result.json()
-        console.log(resultBody)
+
         this.setState({
           bookings: resultBody,
           conflicts: results.conflicts,
           isError: false,
         })
-        // this.setState({
-        //   bookings: [...this.state.bookings, ...results.bookingsWithoutConflicts],
-        //   conflicts: results.conflicts,
-        // })
       }
       catch(err){
         console.log(err)
@@ -102,6 +101,9 @@ class App extends Component {
     acceptedFiles.forEach(file => reader.readAsBinaryString(file))
   }
 
+  // Method for finding conflicts between existing bookings and new bookings.
+  // Please note this function does not check conflicts between all the new bookings.
+  // An assumption was made that the user will check and make sure that there are no conflicts between the new bookings.
   findConflitcts = (newBookings) => {
     const conflicts = [];
     const bookingsWithoutConflicts = [];
@@ -125,7 +127,6 @@ class App extends Component {
       }
     })
     return {conflicts, bookingsWithoutConflicts};
-
   }
 
 
@@ -151,23 +152,6 @@ class App extends Component {
             />
         )}
         {this.state.isError && <h2 style={{color: "red"}}>{this.state.error.message}</h2>}
-        <div className="App-main">
-          {
-            (this.state.bookings).map((booking, i) => {
-              const date = new Date(booking.time);
-              console.log(booking.duration)
-              const duration = booking.duration / (60 * 1000);
-              return (
-                <p key={i} className="App-booking">
-                  <span className="App-booking-time">{date.toString()}</span>
-                  <span className="App-booking-duration">{duration.toFixed(1)}</span>
-                  <span className="App-booking-user">{booking.userId}</span>
-                </p>
-              )
-            })
-          }
-          
-        </div>
       </div>
     );
   }

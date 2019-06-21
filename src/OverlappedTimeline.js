@@ -30,7 +30,8 @@ const DateForm = (props) => {
     const startTime = new Date(props.conflicts[0][0].time);
     return (
         <Fragment>
-            <h2>Conflicts</h2>
+            <h1>Conflicts</h1>
+            <p style={{color: "red", fontSize:"1.5rem"}}>{props.conflicts.length+ " conflicts were found!"}</p>
             <Timeline
                 groups={groups}
                 items={items}
@@ -40,5 +41,5 @@ const DateForm = (props) => {
         </Fragment>
     )
 }
-// Export the component as the default object
+
 export default DateForm;

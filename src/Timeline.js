@@ -18,7 +18,7 @@ const DateForm = (props) => {
     const startTime = new Date(props.bookings[0].time);
     return (
         <Fragment>
-            <h2>Current Bookings</h2>
+            <h1>Current Bookings</h1>
             <Timeline
                 groups={groups}
                 items={items}
