@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import Dropzone from 'react-dropzone';
 import './App.css';
 import Timeline from './Timeline';
-// import uuidv1 from 'uuid/v1';
+import OverlappedTimeline from './OverlappedTimeline';
 const apiUrl = 'http://localhost:3001'
 
 class App extends Component {
@@ -11,14 +11,28 @@ class App extends Component {
     super(props);
     this.state = {
       bookings: [],
+      conflicts: [],
+      isError: false,
+      error: '',
     };
   }
-  componentDidMount() {
-    fetch(`${apiUrl}/bookings`)
-      .then((response) => response.json())
-      .then((bookings) => {
-        this.setState({ bookings })
+  async componentDidMount() {
+    try{
+      const result = await fetch(`${apiUrl}/bookings`)
+      const resultBody = await result.json()
+
+      this.setState({
+        bookings: resultBody,
+        isError: false,
       })
+ 
+    }
+    catch(err){
+      this.setState({
+        error: err,
+        isError: true,
+      })
+    }
   }
 
   onDrop = async acceptedFiles => {
@@ -26,7 +40,7 @@ class App extends Component {
 
     reader.onabort = () => console.log('file reading was aborted')
     reader.onerror = () => console.log('file reading has failed')
-    reader.onload = () => {
+    reader.onload = async () => {
       // Do whatever you want with the file contents
       const binaryStr = reader.result
       const newBookings = [];
@@ -43,7 +57,7 @@ class App extends Component {
           const booking = {};
           headers.forEach((header, index)=>{
             if(header.replace(/\s/g,'') === 'duration'){
-              booking[header.replace(/\s/g,'')] = parseInt(newData[index].trim()) * 60 * 1000;
+              booking[header.replace(/\s/g,'')] = parseInt(newData[index].trim(), 10) * 60 * 1000;
             }
             else{
               booking[header.replace(/\s/g,'')] = newData[index].trim();
@@ -56,8 +70,33 @@ class App extends Component {
       })
       const results = this.findConflitcts(newBookings);
       console.log(results)
-      this.setState({bookings: [...this.state.bookings, ...results.bookingsWithoutConflicts] })
-      
+      try{
+        const result = await fetch(`${apiUrl}/bookings`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(results.bookingsWithoutConflicts),
+        });
+        const resultBody = await result.json()
+        console.log(resultBody)
+        this.setState({
+          bookings: resultBody,
+          conflicts: results.conflicts,
+          isError: false,
+        })
+        // this.setState({
+        //   bookings: [...this.state.bookings, ...results.bookingsWithoutConflicts],
+        //   conflicts: results.conflicts,
+        // })
+      }
+      catch(err){
+        console.log(err)
+        this.setState({
+          error: err,
+          isError: true,
+        })
+      }   
     }
 
     acceptedFiles.forEach(file => reader.readAsBinaryString(file))
@@ -75,7 +114,7 @@ class App extends Component {
         const newBookingStartTime = new Date(newBooking.time).getTime();
         const newBookingEndTime = newBookingStartTime + newBooking.duration;
 
-        if((newBookingStartTime>=oldBookingStartTime && newBookingStartTime<oldBookingEndTime) || (newBookingEndTime>=oldBookingStartTime && newBookingEndTime<oldBookingEndTime) ){
+        if((newBookingStartTime<=oldBookingStartTime && newBookingEndTime>=oldBookingEndTime) || (newBookingStartTime>=oldBookingStartTime && newBookingStartTime<oldBookingEndTime) || (newBookingEndTime>=oldBookingStartTime && newBookingEndTime<oldBookingEndTime) ){
           conflicts.push([oldBooking, newBooking])
           conflictFound = true;
         }
@@ -91,7 +130,6 @@ class App extends Component {
 
 
   render() {
-    console.log(this.state.bookings)
     return (
       <div className="App">
         <div className="App-header">
@@ -102,12 +140,18 @@ class App extends Component {
             Drag files here
           </Dropzone>
         </div>
-        <Timeline 
-          bookings={this.state.bookings} 
-          
-        />
+        {this.state.bookings.length>0 && (
+            <Timeline 
+              bookings={this.state.bookings}         
+            />
+        )}
+        {this.state.conflicts.length > 0 && (
+            <OverlappedTimeline 
+              conflicts={this.state.conflicts}         
+            />
+        )}
+        {this.state.isError && <h2 style={{color: "red"}}>{this.state.error.message}</h2>}
         <div className="App-main">
-          <p>Existing bookings:</p>
           {
             (this.state.bookings).map((booking, i) => {
               const date = new Date(booking.time);
@@ -122,9 +166,7 @@ class App extends Component {
               )
             })
           }
-            {/* {this.state.bookings } */}
           
-
         </div>
       </div>
     );
