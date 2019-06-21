@@ -7,6 +7,8 @@ The application uses the following technologies:
 - Backend: NodeJs with an ExpressJs server
 - Frontend: ReactJs 
 
+<img src="booking-uploader.PNG">
+
 ## Getting Started
 
 Install Dependencies
