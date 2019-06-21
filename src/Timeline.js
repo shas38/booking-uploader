@@ -7,18 +7,19 @@ const DateForm = (props) => {
     const groups = [{ id: 1, title: 'Bookings' }]
 
     const items = props.bookings.map((booking, index) => {
+
         return {
             id: index,
             group: 1,
             title: index,
             start_time: moment(new Date(booking.time)),
             end_time: moment(new Date(booking.time)).add(booking.duration, 'ms')
-        }
+        }     
     })
     const startTime = new Date(props.bookings[0].time);
     return (
         <Fragment>
-            <h1>Current Bookings</h1>
+            <h1>Current Bookings (Australian Eastern Daylight Time)</h1>
             <Timeline
                 groups={groups}
                 items={items}
