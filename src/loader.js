@@ -1,5 +1,4 @@
 import React, {Fragment}from 'react';
-import "./loader.css"
 
 const Loader = (props) => {
 

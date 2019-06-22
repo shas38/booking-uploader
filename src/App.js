@@ -24,7 +24,7 @@ class App extends Component {
   // Converted callbacks to async/await
   componentDidMount = async () => {
     try{
-      this.setState({
+      await this.setState({
         loading: true,
       })
       const result = await fetch(`${apiUrl}/bookings`)
@@ -139,33 +139,29 @@ class App extends Component {
 
   render() {
     return (
-      <Fragment>
-        {
-          this.state.loading?
-          <Loader/>:
-          <div className="App">
-            <div className="App-header">
-              <Dropzone
-                accept=".csv"
-                onDrop={this.onDrop}
-              >
-                Drag files here
-              </Dropzone>
-            </div>
-            {this.state.bookings.length>0 && (
-                <Timeline 
-                  bookings={this.state.bookings}         
-                />
-            )}
-            {this.state.conflicts.length > 0 && (
-                <OverlappedTimeline 
-                  conflicts={this.state.conflicts}         
-                />
-            )}
-            {this.state.isError && <h2 style={{color: "red"}}>{this.state.error.message}</h2>}
+
+        <div className="App">
+          <div className="App-header">
+            <Dropzone
+              accept=".csv"
+              onDrop={this.onDrop}
+            >
+              Drag files here
+            </Dropzone>
           </div>
-        }
-      </Fragment>
+          {this.state.bookings.length>0 && (
+              <Timeline 
+                bookings={this.state.bookings}         
+              />
+          )}
+          {this.state.conflicts.length > 0 && (
+              <OverlappedTimeline 
+                conflicts={this.state.conflicts}         
+              />
+          )}
+          {this.state.isError && <h2 style={{color: "red"}}>{this.state.error.message}</h2>}
+        </div>
+        
     );
   }
 }
