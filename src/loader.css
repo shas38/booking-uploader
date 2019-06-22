@@ -1,0 +1,36 @@
+.loader{
+    height: 50px;
+    animation: rotate 3s linear infinite;
+}
+
+.circle {
+	animation: grow 1.5s linear infinite;
+	background-color: purple;
+	border-radius: 50%;
+	display: inline-block;
+	margin: -10px;
+	height: 40px;
+	width: 40px;
+	transform: scale(0);
+}
+
+.circle:nth-of-type(2) {
+	animation-delay: .5s;
+	background-color: palevioletred;
+}
+.circle:nth-of-type(3) {
+	animation-delay: 1s;
+	background-color: blue;
+}
+
+@keyframes rotate {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes grow {
+	50% {
+		transform: scale(1);
+	}
+}

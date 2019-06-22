@@ -1,8 +1,9 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import Dropzone from 'react-dropzone';
 import './App.css';
 import Timeline from './Timeline';
 import OverlappedTimeline from './OverlappedTimeline';
+import Loader from './loader';
 
 const apiUrl = 'http://localhost:3001'
 
@@ -16,18 +17,23 @@ class App extends Component {
       conflicts: [],
       isError: false,
       error: '',
+      loading: false,
     };
   }
 
   // Converted callbacks to async/await
   componentDidMount = async () => {
     try{
+      this.setState({
+        loading: true,
+      })
       const result = await fetch(`${apiUrl}/bookings`)
       const resultBody = await result.json()
 
       this.setState({
         bookings: resultBody,
         isError: false,
+        loading: false,
       })
  
     }
@@ -35,6 +41,7 @@ class App extends Component {
       this.setState({
         error: err,
         isError: true,
+        loading: false,
       })
     }
   }
@@ -132,27 +139,33 @@ class App extends Component {
 
   render() {
     return (
-      <div className="App">
-        <div className="App-header">
-          <Dropzone
-            accept=".csv"
-            onDrop={this.onDrop}
-          >
-            Drag files here
-          </Dropzone>
-        </div>
-        {this.state.bookings.length>0 && (
-            <Timeline 
-              bookings={this.state.bookings}         
-            />
-        )}
-        {this.state.conflicts.length > 0 && (
-            <OverlappedTimeline 
-              conflicts={this.state.conflicts}         
-            />
-        )}
-        {this.state.isError && <h2 style={{color: "red"}}>{this.state.error.message}</h2>}
-      </div>
+      <Fragment>
+        {
+          this.state.loading?
+          <Loader/>:
+          <div className="App">
+            <div className="App-header">
+              <Dropzone
+                accept=".csv"
+                onDrop={this.onDrop}
+              >
+                Drag files here
+              </Dropzone>
+            </div>
+            {this.state.bookings.length>0 && (
+                <Timeline 
+                  bookings={this.state.bookings}         
+                />
+            )}
+            {this.state.conflicts.length > 0 && (
+                <OverlappedTimeline 
+                  conflicts={this.state.conflicts}         
+                />
+            )}
+            {this.state.isError && <h2 style={{color: "red"}}>{this.state.error.message}</h2>}
+          </div>
+        }
+      </Fragment>
     );
   }
 }
